@@ -8,64 +8,47 @@ library(dplyr)
 library(fmsb)
 
 # ── 1. Input data ─────────────────────────────────────────────────────────────
-data_raw <- tibble::tribble(
-  ~NAFO_zone, ~mean_vulnerability, ~mean_s_thermal_safety_margin, ~mean_e_climate_velocity,
-  ~mean_yr_climate_velocity, ~mean_e_time_climate_emergence, ~mean_ac_thermal_habitat_availability,
-  "2G",  0.413590531, 0.027878101, 0.022489252, 0.022489252, 2095.808081, 0.352676015,
-  "2H",  0.408443861, 0.050236231, 0.013610098, 0.013610098, 2095.035962, 0.436961472,
-  "2J",  0.394216311, 0.095897850, 0.027453522, 0.027453522, 2095.603331, 0.513354607,
-  "3K",  0.387042494, 0.268729553, 0.057663223, 0.057663223, 2095.085906, 0.597131609,
-  "3L",  0.429708219, 0.674611777, 0.053810219, 0.053810219, 2091.581142, 0.747625286,
-  "3N",  0.487921677, 1.000000000, 0.046397349, 0.046397349, 2063.047641, 0.847850939,
-  "3O",  0.485195329, 1.000000000, 0.027370456, 0.027370456, 2049.926471, 0.814528770,
-  "3Pn", 0.466924104, 1.000000000, 0.157124456, 0.157124456, 2067.564103, 0.827342371,
-  "3Ps", 0.471652876, 0.987872686, 0.061531755, 0.061531755, 2068.314794, 0.841126008,
-  "4R",  0.474830685, 0.832770420, 0.048122084, 0.048122084, 2069.921163, 0.622698494,
-  "4S",  0.465875492, 0.835001885, 0.075589021, 0.075589021, 2078.782991, 0.603663826,
-  "4T",  0.519598411, 0.968315798, 0.063883351, 0.063883351, 2042.692688, 0.616671251,
-  "4Vn", 0.494240224, 1.000000000, 0.167013231, 0.167013231, 2046.925639, 0.759867330,
-  "4Vs", 0.476423457, 1.000000000, 0.077805466, 0.077805466, 2044.462898, 0.803605176,
-  "4W",  0.507844278, 1.000000000, 0.040780185, 0.040780185, 2036.193756, 0.751649217,
-  "4X",  0.530677610, 0.886045450, 0.092948385, 0.092948385, 2022.452652, 0.781688792,
-  "5Y",  0.548811807, 0.739921122, 0.213446769, 0.213446769, 2017.777778, 0.784265292,
-  "5Ze", 0.552518041, 1.000000000, 0.029923514, 0.029923514, 2015.000000, 0.736961634
-)
+data_raw <- read.csv("CRIB results/crib_AtlHalibut_byNAFO_SSPs.csv")
+unique(data_raw$NAFO_Zones)
+names(data_raw)
 
 # ── 2. Zone order: South → North ──────────────────────────────────────────────
 # 5Ze and 5Y are southernmost; 2G is northernmost
-south_to_north <- c("5Ze", "5Y", "4X", "4W", "4Vs", "4Vn", "4T", "4S", "4R",
-                    "3Ps", "3Pn", "3O", "3N", "3L", "3K", "2J", "2H", "2G")
+south_to_north <- c("5YZ6A", "4X", "4VW", "4RST", "3NOPs", "3KL", "2JHG")
 
 data_ordered <- data_raw %>%
-  mutate(NAFO_zone = factor(NAFO_zone, levels = south_to_north)) %>%
-  arrange(NAFO_zone)
+  mutate(NAFO_Zones = factor(NAFO_Zones, levels = south_to_north)) %>%
+  arrange(NAFO_Zones)
+
+df1<- data_ordered[data_ordered$ssp=="SSP1-2.6",]
+df2<- data_ordered[data_ordered$ssp=="SSP5-8.5",]
 
 # ── 3. Legend labels with emergence year ─────────────────────────────────────
-legend_labels <- data_ordered %>%
-  mutate(label = paste0(NAFO_zone, "  (", round(mean_e_time_climate_emergence), ")")) %>%
+legend_labels <- df1 %>%
+  mutate(label = paste0(NAFO_Zones, "  (", round(mean_yr_climate_emergence), ")")) %>%
   pull(label)
 
 # ── 4. Select the 5 radar variables ──────────────────────────────────────────
-spider_data <- data_ordered %>%
+spider_data <- df1 %>%
   select(
-    NAFO_zone,
+    NAFO_Zones,
     Vulnerability            = mean_vulnerability,
     `Thermal Safety Margin`  = mean_s_thermal_safety_margin,
-    `Climate Velocity (E)`   = mean_e_climate_velocity,
-    `Climate Velocity (YR)`  = mean_yr_climate_velocity,
-    `Thermal Habitat Avail.` = mean_ac_thermal_habitat_availability
+    `Climate Velocity`   = mean_e_climate_velocity,
+    `Time of Climate Emergence`  = mean_e_time_climate_emergence,
+    `Thermal Habitat Variab.` = mean_ac_thermal_habitat_variability
   )
 
 # ── 5. Normalise to [0, 1] ────────────────────────────────────────────────────
 spider_norm <- spider_data %>%
-  mutate(across(-NAFO_zone, ~ (.x - min(.x)) / (max(.x) - min(.x))))
+  mutate(across(-NAFO_Zones, ~ (.x - min(.x)) / (max(.x) - min(.x))))
 
 # ── 6. Build fmsb data frame ──────────────────────────────────────────────────
 mat <- spider_norm %>%
-  select(-NAFO_zone) %>%
+  select(-NAFO_Zones) %>%
   as.data.frame()
 
-rownames(mat) <- spider_norm$NAFO_zone
+rownames(mat) <- spider_norm$NAFO_Zones
 
 fmsb_df <- rbind(
   Max = rep(1, ncol(mat)),
@@ -88,7 +71,7 @@ gradient_colors <- colorRampPalette(
 )(n)
 
 # ── 8. Plot ───────────────────────────────────────────────────────────────────
-png("spider_plot_NAFO_output.png", width = 1050, height = 780, res = 120, bg = "white")
+png("CRIB results/spider_plot_NAFO_SSP126.png", width = 1050, height = 780, res = 120, bg = "white")
 
 par(bg = "white", mar = c(1, 1, 4, 1))
 
