@@ -38,7 +38,9 @@ standard_theme <- function(show_legend = FALSE, bottom_margin =5, top_margin =-1
 #end trail----
 #Read in FIle
 # Read in the coefficients dataframes
-Combined_CentredSLopeBefAfterCoefficients <- read.csv("~/My_Program_Files/R/Hali_Shift_withNF/2025-04-23/Output/Shift_Indicators/Combined_CentredSLopeBefAfterCoefficients.csv")
+# KF EDIT# Combined_CentredSLopeBefAfterCoefficients <- read.csv("~/My_Program_Files/R/Hali_Shift_withNF/2025-04-23/Output/Shift_Indicators/Combined_CentredSLopeBefAfterCoefficients.csv")
+Combined_CentredSLopeBefAfterCoefficients<- read.csv(here::here("2025-04-23/Output/Shift_Indicators/Combined_CentredSLopeBefAfterCoefficients.csv"))
+
 ## Rename Indicator level for depth-weighted abundance
 Combined_CentredSLopeBefAfterCoefficients$Indicator[Combined_CentredSLopeBefAfterCoefficients$Indicator=="Depth-wtd Abd"]<-"Abd-wtd Depth"
 # Assign to a new variable for clarity
@@ -144,8 +146,16 @@ abdpl <- ggplot(abdcoef, aes(y = estimate, x = Indicator, fill = Period)) +
     x = NULL,
     fill = "Period"
   ) +
-  # Theme
-  standard_theme()
+  standard_theme(top_margin = 10)+
+  #KF EDIT# Legend styling oncorporated into this plot 
+  theme(
+    legend.box.background = element_blank(),
+    legend.position = "top",
+    legend.title = element_blank(),
+    legend.text = element_text(size = 12),
+    legend.margin     = margin(0, 0, 0, 0),
+    legend.box.margin = margin(0, 0, 0, 0),
+    legend.key = element_rect(fill = "white", color = NA))
 
 abdpl
 #ENDABD----
@@ -243,8 +253,8 @@ AOabdpl <- ggplot(AOabdcoef, aes(y = estimate, x = Indicator, fill = Period)) +
   # Points
   geom_point(size = 3, position = pd, stroke = 0.3, shape = 21, color = "black") +
   # Optional indicator divider lines
-  geom_vline(data = indicator_dividers, aes(xintercept = xintercept), 
-             linetype = "solid", color = "grey60", size = 0.4) +
+#  geom_vline(data = indicator_dividers, aes(xintercept = xintercept), 
+#             linetype = "solid", color = "grey60", size = 0.4) +
   # Horizontal reference line
   geom_hline(yintercept = 0, linetype = "dashed", size = 0.8) +
   # y-axis ticks
@@ -279,8 +289,8 @@ dwapl <- ggplot(dwacoef, aes(y = estimate, x = Indicator, fill = Period)) +
   # Points
   geom_point(size = 3, position = pd, stroke = 0.3, shape = 21, color = "black") +
   # Optional indicator divider lines
-  geom_vline(data = indicator_dividers, aes(xintercept = xintercept), 
-             linetype = "solid", color = "grey60", size = 0.4) +
+#  geom_vline(data = indicator_dividers, aes(xintercept = xintercept), 
+#             linetype = "solid", color = "grey60", size = 0.4) +
   # Horizontal reference line
   geom_hline(yintercept = 0, linetype = "dashed", size = 0.8) +
   # y-axis ticks
@@ -314,8 +324,8 @@ dtbpl <- ggplot(dtbcoef, aes(y = estimate, x = Indicator, fill = Period)) +
   # Points
   geom_point(size = 3, position = pd, stroke = 0.3, shape = 21, color = "black") +
   # Optional indicator divider lines
-  geom_vline(data = indicator_dividers, aes(xintercept = xintercept), 
-             linetype = "solid", color = "grey60", size = 0.4) +
+#  geom_vline(data = indicator_dividers, aes(xintercept = xintercept), 
+#             linetype = "solid", color = "grey60", size = 0.4) +
   # Horizontal reference line
   geom_hline(yintercept = 0, linetype = "dashed", size = 0.8) +
   # y-axis ticks
@@ -376,15 +386,29 @@ standard_theme <- function(show_legend = FALSE, bottom_margin =5, top_margin =-1
 }
 
 # Apply themes to each plot
-p1 <- abdpl + standard_theme(show_legend = FALSE, top_margin = 15)  # maybe larger top margin for outer margin
-p2 <- cogpl + standard_theme(show_legend = FALSE) + theme(strip.text = element_blank())
-p3 <- AOcoefpl + standard_theme(show_legend = FALSE) + theme(strip.text = element_blank())
-p4 <- AOabdpl + standard_theme(show_legend = FALSE) + theme(strip.text = element_blank())
-p5 <- rangpl + standard_theme(show_legend = FALSE) + theme(strip.text = element_blank())
-p6 <- dwapl + standard_theme(show_legend = FALSE) + theme(strip.text = element_blank())
-p7 <- dtbpl + standard_theme(show_legend = TRUE) + theme(strip.text = element_blank())
+p1 <- abdpl# + standard_theme(show_legend = TRUE, top_margin = 5)  # maybe larger top margin for outer margin
+p2 <- cogpl + standard_theme(show_legend = FALSE) + theme( strip.background = element_blank(), 
+                                                           strip.text = element_blank())
+p3 <- AOcoefpl + standard_theme(show_legend = FALSE) +  theme( strip.background = element_blank(), 
+                                                                strip.text = element_blank())
+p4 <- AOabdpl + standard_theme(show_legend = FALSE) +  theme( strip.background = element_blank(), 
+                                                               strip.text = element_blank())
+p5 <- rangpl + standard_theme(show_legend = FALSE) + theme( strip.background = element_blank(), 
+                                                              strip.text = element_blank())
+p6 <- dwapl + standard_theme(show_legend = FALSE) + theme( strip.background = element_blank(), 
+                                                             strip.text = element_blank())
+p7 <- dtbpl + standard_theme(show_legend = FALSE) + theme( strip.background = element_blank(), 
+                                                            strip.text = element_blank())
 
 # Combine plots vertically with labels, aligned axes, and relative heights
+
+#KF EDIT# create a title 
+title_row <- ggdraw() +
+  draw_label("Figure 7",
+             x = .03, hjust = 0,
+             fontfamily = "serif",
+             size = 14)
+
 simple_combo <- plot_grid(
   p1, p2, p3, p4, p5, p6, p7,
   ncol = 1,
@@ -392,21 +416,33 @@ simple_combo <- plot_grid(
   label_fontfamily = "serif",
   align = "v",
   axis = "lr",
-  rel_heights = c(1.1, 1.1, .9, .9, 1.3, .6, .6),
+  rel_heights = c(1.5, 1.1, .9, .9, 1.3, .6, .6),#KF EDIT# gave the top plot more height to accomodate legend
   label_x = 0.02,
   label_y = 1
 )
 
-# Save directly - do NOT wrap in ggdraw or add a theme here
-ggsave(
-  filename = here::here("NancBranchDataScript/FancyFiguresforMS/CentredSlopeCombo.jpeg"),
-  plot = simple_combo,
-  width = 8,
-  height = 11,
-  units = "in",
-  dpi = 600
+#KF EDIT# Combine them
+simple_combo_with_title <- plot_grid(
+  title_row,
+  simple_combo,
+  ncol = 1,
+  rel_heights = c(0.05, 1)   # increase 0.08 for more space under title
 )
 
+#KF EDIT# save as tif
+ggsave(here::here("FebFigs/Figure7_CentredSlopeCombo_Feb.tif"), plot = simple_combo_with_title, dpi = 600, width = 6.5, height = 8.5, units = "in", compression = "lzw", bg = "white") 
 
-ggsave(here::here("NancBranchDataScript/FancyFiguresforMS/CentredSlopeCombo_Feb4_2026.jpeg"), plot = simple_combo, dpi = 600, width = 8, height = 11, units = "in", device = "jpeg") 
+
+# Save directly - do NOT wrap in ggdraw or add a theme here
+#ggsave(
+#  filename = here::here("NancBranchDataScript/FancyFiguresforMS/CentredSlopeCombo.jpeg"),
+#  plot = simple_combo,
+#  width = 8,
+#  height = 11,
+#  units = "in",
+#  dpi = 600
+#)
+
+
+#ggsave(here::here("NancBranchDataScript/FancyFiguresforMS/CentredSlopeCombo_Feb4_2026.jpeg"), plot = simple_combo, dpi = 600, width = 8, height = 11, units = "in", device = "jpeg") 
 

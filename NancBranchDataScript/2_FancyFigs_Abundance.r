@@ -29,6 +29,7 @@ theme_replace(legend.key =element_rect(colour="black",fill="white"),
               
               legend.background=element_rect(size=.9,colour="white",fill="white"),
               
+              plot.tag = element_text(face = "plain", family = "serif", size = 12),
               strip.text=element_text(size=14,family="serif",angle=0),
               
               panel.border = element_rect(colour = "black",fill=NA),
@@ -360,6 +361,7 @@ CAPlot_clean <- CAPlot +
   theme(
     axis.title.y = element_blank(),
     legend.position = "none",
+    legend.text = element_text(size = 14, family = "serif"),
     plot.margin = margin(t=2, r=10, b=2, l=2)  # Tight margins
   )
 
@@ -394,11 +396,11 @@ camap_with_legend <- plot_grid(
 )
 
 
-
+#FEB- DOES NOT WORK WELL , therefore,just label afer
 # 1. Manually label bottom plots
-camap_with_legend_tagged<-camap_with_legend+labs(tag = "a)")
-CAPlot_tagged <- CAPlot_clean + labs(tag = "b)")
-ARegionalPlot_tagged <- ARegionalPlot_clean + labs(tag = "c)")
+camap_with_legend_tagged<-camap_with_legend#+labs(tag = "(a)")+theme(plot.tag = element_text(face = "plain", family = "serif", size = 14))
+CAPlot_tagged <- CAPlot_clean#+ labs(tag = "(b)")+legend.text = element_text(size = 14, family = "serif")+theme(plot.tag = element_text(face = "plain", family = "serif", size = 14))
+ARegionalPlot_tagged <- ARegionalPlot_clean #+ labs(tag = "(c)")+theme(plot.tag = element_text(face = "plain", family = "serif", size = 14))
 
 # 2. Create vertical shared axis
 shared_y <- textGrob("Abundance (Millions)", 
@@ -417,21 +419,26 @@ bottom_row_with_y <- arrangeGrob(
 # 4. Wrap in patchwork
 bottom_row_patchwork <- wrap_elements(full = bottom_row_with_y)
 
+
 # 5. Combine with top plot
 final_plot <- camap_with_legend_tagged / bottom_row_patchwork +
   plot_layout(heights = c(1.5, 1.2)) +
-  #plot_annotation(tag_levels = 'a', tag_suffix = ')') & 
-  theme(
+ #draw_label("Figure 2", x = 0.01, y = 1, hjust = 0, vjust = 1, size = 14,fontfamily="serif") +
+    theme(
     plot.margin = margin(t = 5, r = 10, b = 5, l = 10),
     # plot.tag.position = c(0.01, 0.98),
     #plot.tag = element_text(size = 14, face = "bold")
   )
 
 # Display
-final_plot
-
+final_plot2<-ggdraw(final_plot) +
+  draw_plot_label(label = "(a)", x = 0.01, y = 0.89, size = 14,family="serif") +   # Top left
+  draw_plot_label(label = "(b)", x = 0.01, y = 0.5, size = 14,,family="serif") +   # Top right  
+  draw_plot_label(label = "(c)", x = 0.448, y = 0.5, size = 14,,family="serif") +    # Bottom (centered plot)
+  draw_plot_label(label = "Figure 2", x = 0.001, y = 1, size = 11,family="serif")  # Top left
 #END manual labels----
-final_plot
+final_plot2
 # Save the final plot with legend
-ggsave(here::here("NancBranchDataScript/FancyFiguresforMS/FigureAbundanceFAandMapTrends.jpeg"), plot = final_plot, dpi = 600, width = 8, height = 6, units = "in", device = "jpeg")
+ggsave(here::here("NancBranchDataScript/FancyFiguresforMS/FigureAbundanceFAandMapTrends_Feb11_2026.tif"), plot = final_plot2, dpi = 600, width = 7, height = 6, units = "in", compression="lzw")
 
+ggsave(here::here("FebFigs/FigureAbundanceFAandMapTrends_Feb11_2026.tif"), plot = final_plot2, dpi = 600, width = 7, height = 6, units = "in", compression="lzw")

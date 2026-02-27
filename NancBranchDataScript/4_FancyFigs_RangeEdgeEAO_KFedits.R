@@ -31,9 +31,7 @@ theme_replace(legend.key =element_rect(colour="black",fill="white"),
               
               strip.text=element_text(size=14,family="serif",angle=0),
               
-              panel.border = element_rect(colour = "black",fill=NA),
-              
-              panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
               
               strip.background=element_rect(colour="black",fill="white"),
               
@@ -93,23 +91,30 @@ EAOplot<-ggplot(Area_ThresholdsforEAO %>% filter(Threshold == 90),
                scales = "free",
                labeller = label_wrap_gen(width = 15)) +
   theme(text = element_text(family = "serif"),  
+        panel.border = element_rect(colour = "black",fill=NA),
+        strip.text=element_text(size=11,family="serif",angle=0,margin = margin(t = 5, b = 5)),
         legend.box.background = element_blank(), # Transparent legend box
         legend.position = c(.7,.5),
-        legend.text = element_text(size = 12,family="serif"),
+        legend.text = element_text(size = 10,family="serif"),
         plot.margin=margin(0, 0, 0, 0))
 EAOplot
 
 #####END Plot EOA----
 
-ggsave(here::here("NancBranchDataScript/FancyFiguresforMS/EAOplot.jpeg"), plot = EAOplot, dpi = 600, width = 8, height = 6, units = "in", device = "jpeg")
+ggsave(here::here("NancBranchDataScript/FancyFiguresforMS/EAOplotFeb2026.tif"), plot = EAOplot, dpi = 600, width = 8, height = 6, units = "in", compression = "lzw")
 
 #Element 2:  Plot EAOvsAbd: Tidied Area vs Abundance Plot----
 library(ggpmisc)
 names(Area_ThresholdsforEAO$Period)[names(Area_ThresholdsforEAO$Period) == "Before Warming"] <- "1990-2005"
 names(Area_ThresholdsforEAO$Period)[names(Area_ThresholdsforEAO$Period) == "During Warming"] <- "2006-2023"
+Area_ThresholdsforEAO %>% 
+  filter(Threshold == 90) %>%
+  distinct(Region, Year, Period, Total_Abundance, Area_Threshold)
 PlotEAOAbd <- ggplot(Area_ThresholdsforEAO %>% filter(Threshold == 90),
                      aes(y = Area_Threshold/1000000,  # Remove log10() transformation
-                         x = Total_Abundance/1000000)) +  # Remove log10() transformation
+                    x = Total_Abundance/1000000)) +  # Remove log10() transformation
+  #aes(y = Area_Threshold,  
+   #   x = Total_Abundance)) +  # Remove log10() transformation
   # Points with better styling
   geom_point(aes(color = Period), 
              size = 2.5, 
@@ -117,10 +122,10 @@ PlotEAOAbd <- ggplot(Area_ThresholdsforEAO %>% filter(Threshold == 90),
   scale_color_manual(values = c("1990-2005" = "steelblue", "2006-2023" = "orangered"))+
   # Smoothed regression lines
   geom_smooth(method = "lm", 
-              se = TRUE,
+             se = FALSE,
               aes(group = interaction(Region, Period), 
-                  color = Period),
-              alpha = .1) +
+                 color = Period),
+            alpha = .5) +
   # Add log10 scales for both axes
   scale_x_log10() +  # This replaces the log10() transformation in aes()
     scale_y_log10(
@@ -133,7 +138,7 @@ PlotEAOAbd <- ggplot(Area_ThresholdsforEAO %>% filter(Threshold == 90),
              labeller = label_wrap_gen(width = 15)) +
   # Improved labels - you can keep the log notation in labels
   labs(title = "",
-      x =  expression("Total Annual Abundance(Millions)"),
+      x =  expression("Total Annual Abundance (Millions)"),
      #  y = "",#expression(atop("Area Occupied", "(Millions km"^2*")")),
        color = "Period") +
   guides(fill = "none") +
@@ -170,10 +175,8 @@ PlotEAOAbd <- ggplot(Area_ThresholdsforEAO %>% filter(Threshold == 90),
     # Grid lines
     panel.grid.minor = element_blank(),
     panel.grid.major = element_blank()
-  ) +
-  scale_y_log10(
-    sec.axis = dup_axis(name = expression(atop("Area Occupied", "(Millions km"^2*")")))
-  )
+  )# +  scale_y_log10(sec.axis = dup_axis(name = expression(atop("Area Occupied", "(Millions km"^2*")")))
+  #)
 
 # Display the plot
 print(PlotEAOAbd)
@@ -181,7 +184,7 @@ print(PlotEAOAbd)
 # Alternative: If you want different colors for periods
 # PlotEAOAbd + scale_color_manual(values = c("Period1" = "steelblue", "Period2" = "orangered"))
 #####END PlotEAOvsAbd, scaled slopes fro EAO vs Abundance----
-ggsave(here::here("NancBranchDataScript/FancyFiguresforMS/PlotEAOAbd.jpeg"), plot = PlotEAOAbd, dpi = 600, width = 8, height = 6, units = "in", device = "jpeg")
+ggsave(here::here("NancBranchDataScript/FancyFiguresforMS/PlotEAOAbdFeb26.tif"), plot = PlotEAOAbd, dpi = 600, width = 8, height = 6, units = "in",compression="lzw")
 
 #Element 3: Range Edge  ----
 rangeedge<-read.csv(here::here("R/DataforFinalFigs/Edge_df_NSreshp.csv"))
@@ -449,6 +452,7 @@ library(ggpmisc)
 RE_DAT<- read.csv(here::here("R/DataforFinalFigs/Edge_df_NSreshp.csv"))
 names(RE_DAT)
 # Get high-res coastline
+library(rnaturalearth)
 coast <- ne_coastline(scale = "large", returnclass = "sf")
 ######################
 #test on subset----

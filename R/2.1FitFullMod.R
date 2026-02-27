@@ -243,7 +243,9 @@ if(first_run){
   region_raster<- projectRaster(region_raster, crs = 4326)# i have exported this raster becasue i think i need it to calculate area occupied down the road
   #filepath <- "C:/Users/FergusonK/Documents/Halibut/Shift_Analysis/Shift_Analysis/R/data/RegionRaster/region_raster.tif"
   #writeRaster(region_raster, filepath, format = "GTiff", overwrite = TRUE)
-  region_raster[]<- NA
+  #writeRaster(region_raster, "C:/Users/fergusonk/Documents/Halibut/Hali_Shift_withNF/Data/extrapolation_grid/my_raster.tif", format = "GTiff", overwrite = TRUE)
+  
+   region_raster[]<- NA
   region_sf <- st_as_sf(region_grid, crs = crs_utm)
   
   # Now get only the points that fall within the shape polygon
