@@ -105,7 +105,7 @@ raster_data2 <- rasterize(spatial_points2, r, field = "ToE.year", fun = mean)
 library(rnaturalearth)
 library(rnaturalearthdata)
 library(viridis) 
-raster_df<-as.data.frame(raster_data1, xy=TRUE)
+raster_df<-as.data.frame(raster_data2, xy=TRUE)
 colnames(raster_df) <- c("longitude", "latitude", "ToE.year") 
 VMAP <- ggplot() +
   geom_raster(data = raster_df, aes(x = longitude, y = latitude, fill = `ToE.year`)) +
@@ -249,7 +249,7 @@ raster_data2 <- rasterize(spatial_points2, r, field = "ToE.year", fun = mean)
 library(rnaturalearth)
 library(rnaturalearthdata)
 library(viridis) 
-raster_df<-as.data.frame(raster_data2, xy=TRUE)
+raster_df<-as.data.frame(raster_data1, xy=TRUE)
 colnames(raster_df) <- c("longitude", "latitude", "ToE.year") 
 VMAP <- ggplot() +
   geom_raster(data = raster_df, aes(x = longitude, y = latitude, fill = `ToE.year`)) +
@@ -266,7 +266,7 @@ VMAP <- ggplot() +
   xlim(-72.5, -45) + ylim(39, 60) +
   theme_bw() +
   theme(axis.text = element_text(angle = 0, vjust = 0.2, hjust = 1, size = 8, family = "serif")) +
-  labs(title = "Time of Climate Emergence SSP5-8.5", x = "Longitude", y = "Latitude", color = "Time of Climate Emergence")
+  labs(title = "Time of Climate Emergence SSP1-2.6", x = "Longitude", y = "Latitude", color = "Time of Climate Emergence")
 print(VMAP) 
 
 ### Calculate average + SD for each indicator in zones 4X, 4VW, and 3KL:###
@@ -298,7 +298,9 @@ halcrib_with_zones_clean1 <- halcrib_with_zones_clean %>%
       ZONE %in% c("4X") ~ "4X",
       ZONE %in% c("3N","3O","3Pn","3Ps") ~ "3NOPs",
       ZONE %in% c("3K","3L") ~ "3KL",
-      ZONE %in% c("2J","2H","2G") ~ "2JHG"
+      ZONE %in% c("2J","2H","2G") ~ "2JHG",
+      ZONE %in% c("5Y","5Ze", "5Zw", "6A") ~ "5YZ6A",
+      ZONE %in% c("4R","4S","4T") ~ "4RST"
     )
   )
 head(halcrib_with_zones_clean1)
@@ -327,23 +329,25 @@ head(summary_stats)
 non_spatial_data <- st_drop_geometry(summary_stats)
 head(non_spatial_data)
 df<-as.data.frame(non_spatial_data)
-write.csv(df, "CRIB results/crib_AtlHalibut_byNAFO_SSPs.csv", row.names = FALSE)
+write.csv(df, "CRIB results/crib_GreenlandHalibut_byNAFO_SSPs.csv", row.names = FALSE)
 
 # Group halcrib_with_zones by NAFO zone and calculate summary risks
-most_frequent_risks <- halcrib_with_zones_clean1 %>%
-  group_by(NAFO_Zones, ssp) %>%  # Group by NAFO zone
+risk_summary <- halcrib_with_zones_clean1 %>%
+  group_by(NAFO_Zones, ssp, Overall.Risk) %>% # Group by NAFO_Zones, SSP, and Overall.Risk
   summarise(
-    most_frequent_overall_risk = names(sort(table(`Overall.Risk`), decreasing = TRUE)[1]),
-    most_frequent_s_thermal_safety_margin_risk = names(sort(table(`S.Thermal.safety.margin.risk`), decreasing = TRUE)[1]),
-    most_frequent_e_climate_velocity_risk = names(sort(table(`E.Climate.velocity.risk`), decreasing = TRUE)[1]),
-    most_frequent_e_time_of_climate_emergence_risk = names(sort(table(`E.Time.of.climate.emergence.risk`), decreasing = TRUE)[1]),
-    most_frequent_ac_thermal_habitat_variability_risk = names(sort(table(`AC.Thermal.habitat.availability.risk`), decreasing = TRUE)[1]),
-    .groups = "drop"  # Ungroup after summarizing
-  )
-print(most_frequent_risks)
+    count = n(),                              # Count the number of rows in each group
+    .groups = "drop_last"                     # Keep grouping by NAFO_Zones and ssp
+  ) %>%
+  mutate(
+    percentage = (count / sum(count)) * 100  # Calculate percentage for each Overall.Risk
+  ) %>%
+  ungroup() # Ungroup to return ungrouped data
+
+# View the summary
+print(risk_summary)
 
 # Remove geometry column
-non_spatial_data <- st_drop_geometry(most_frequent_risks)
+non_spatial_data <- st_drop_geometry(risk_summary)
 head(non_spatial_data)
 non_spatial_data<-as.data.frame(non_spatial_data)
-write.csv(non_spatial_data, "CRIB results/crib_risk_AtlHalibut_byNAFO_SSPs.csv", row.names = FALSE)
+write.csv(non_spatial_data, "CRIB results/crib_risksummary_GreenlandHalibut_byNAFO_SSPs.csv", row.names = FALSE)
