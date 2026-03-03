@@ -174,6 +174,8 @@ summary_stats <- halcrib_with_zones_clean1 %>%
     sd_e_climate_velocity = sd(`E.Climate.velocity`, na.rm = TRUE),
     mean_yr_climate_emergence = mean(`ToE.year`, na.rm = TRUE),
     sd_yr_climate_emergence = sd(`ToE.year`, na.rm = TRUE),
+    n_yr_climate_emergence = n(),  # Number of rows in each group
+    ci_yr_climate_emergence = 1.96 * (sd(ToE.year, na.rm = TRUE) / sqrt(n())),
     mean_e_time_climate_emergence = mean(`E.Time.of.climate.emergence`, na.rm = TRUE),
     sd_e_time_climate_emergence = sd(`E.Time.of.climate.emergence`, na.rm = TRUE),
     mean_ac_thermal_habitat_variability = mean(`AC.Thermal.habitat.availability`, na.rm = TRUE),
@@ -317,6 +319,8 @@ summary_stats <- halcrib_with_zones_clean1 %>%
     sd_e_climate_velocity = sd(`E.Climate.velocity`, na.rm = TRUE),
     mean_yr_climate_emergence = mean(`ToE.year`, na.rm = TRUE),
     sd_yr_climate_emergence = sd(`ToE.year`, na.rm = TRUE),
+    n_yr_climate_emergence = n(),  # Number of rows in each group
+    ci_yr_climate_emergence = 1.96 * (sd(ToE.year, na.rm = TRUE) / sqrt(n())),
     mean_e_time_climate_emergence = mean(`E.Time.of.climate.emergence`, na.rm = TRUE),
     sd_e_time_climate_emergence = sd(`E.Time.of.climate.emergence`, na.rm = TRUE),
     mean_ac_thermal_habitat_variability = mean(`AC.Thermal.habitat.availability`, na.rm = TRUE),

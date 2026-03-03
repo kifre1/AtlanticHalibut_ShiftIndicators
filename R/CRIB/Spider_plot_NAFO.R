@@ -24,12 +24,12 @@ df1<- data_ordered[data_ordered$ssp=="SSP1-2.6",]
 df2<- data_ordered[data_ordered$ssp=="SSP5-8.5",]
 
 # ── 3. Legend labels with emergence year ─────────────────────────────────────
-legend_labels <- df1 %>%
+legend_labels <- df2 %>%
   mutate(label = paste0(NAFO_Zones, "  (", round(mean_yr_climate_emergence), ")")) %>%
   pull(label)
 
 # ── 4. Select the 5 radar variables ──────────────────────────────────────────
-spider_data <- df1 %>%
+spider_data <- df2 %>%
   select(
     NAFO_Zones,
     Vulnerability            = mean_vulnerability,
@@ -71,7 +71,7 @@ gradient_colors <- colorRampPalette(
 )(n)
 
 # ── 8. Plot ───────────────────────────────────────────────────────────────────
-png("CRIB results/spider_plot_NAFO_SSP126.png", width = 1050, height = 780, res = 120, bg = "white")
+png("CRIB results/spider_plot_NAFO_SSP585.png", width = 1050, height = 780, res = 120, bg = "white")
 
 par(bg = "white", mar = c(1, 1, 4, 1))
 
