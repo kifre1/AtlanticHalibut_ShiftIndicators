@@ -15,10 +15,91 @@ names(data_raw)
 # ── 2. Zone order: South → North ──────────────────────────────────────────────
 # 5Ze and 5Y are southernmost; 2G is northernmost
 south_to_north <- c("5YZ6A", "4X", "4VW", "4RST", "3NOPs", "3KL", "2JHG")
+data_raw$NAFO_Zones <- factor(data_raw$NAFO_Zones, levels = south_to_north)
 
 data_ordered <- data_raw %>%
   mutate(NAFO_Zones = factor(NAFO_Zones, levels = south_to_north)) %>%
   arrange(NAFO_Zones)
+
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(viridis) # For the viridis color scale
+
+# Define colors from viridis (yellow for 5YZ6A to purple for 2JHG)
+viridis_fill <- scale_fill_viridis_d(option = "viridis", direction = -1)
+viridis_fill_flipped <- scale_fill_viridis_d(option = "viridis")
+
+# Function to plot single indices (with mean and standard deviation)
+plot_single_index <- function(data, mean_col, sd_col, title) {
+  ggplot(data, aes(x = NAFO_Zones, y = !!sym(mean_col), fill = NAFO_Zones)) +
+    geom_bar(stat = "identity", color = "black", position = position_dodge()) +
+    geom_errorbar(aes(ymin = !!sym(mean_col) - !!sym(sd_col),
+                      ymax = !!sym(mean_col) + !!sym(sd_col)), width = 0.2, position = position_dodge(0.9)) +
+    labs(
+      title = title,
+      x = "NAFO Zones (South to North)",
+      y = "Mean ± SD"
+    ) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    viridis_fill
+}
+
+# Function to plot climate emergence index with scenarios
+plot_climate_emergence <- function(data) {
+  ggplot(data, aes(x = NAFO_Zones, y = mean_yr_climate_emergence, fill = ssp)) +
+    geom_bar(stat = "identity", color = "black", position = position_dodge()) +
+    # Add standard deviation error bars
+    geom_errorbar(
+      aes(ymin = mean_yr_climate_emergence - sd_yr_climate_emergence,
+          ymax = mean_yr_climate_emergence + sd_yr_climate_emergence),
+      width = 0.2, position = position_dodge(0.9), color = "gray50"
+    ) +
+    # Add confidence intervals (if available)
+    geom_errorbar(
+      aes(ymin = mean_yr_climate_emergence - ci_yr_climate_emergence,
+          ymax = mean_yr_climate_emergence + ci_yr_climate_emergence),
+      width = 0.2, position = position_dodge(0.9), color = "black"
+    ) +
+    labs(
+      title = "Bar Plot for Climate Emergence (Scenarios)",
+      subtitle = "Gray: Standard Deviation, Black: Confidence Interval",
+      x = "NAFO Zones (South to North)",
+      y = "Mean ± Error",
+      fill = "SSP Scenarios"
+    ) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    viridis_fill_flipped
+}
+
+# Create the individual plots
+plot_thermal_safety <- plot_single_index(
+  data_raw, 
+  "mean_s_thermal_safety_margin", 
+  "sd_s_thermal_safety_margin", 
+  "Mean S-Thermal Safety Margin ± SD"
+)
+
+plot_habitat_variability <- plot_single_index(
+  data_raw, 
+  "mean_ac_thermal_habitat_variability",
+  "sd_ac_thermal_habitat_variability", 
+  "Mean AC-Thermal Habitat Variability ± SD"
+)
+
+# Filter data for the climate emergence index with scenarios
+data_climate_emergence <- data_raw %>%
+  filter(ssp %in% c("SSP1-2.6", "SSP5-8.5"))
+
+plot_climate_emergence_plot <- plot_climate_emergence(data_climate_emergence)
+
+# Show the plots
+print(plot_thermal_safety)
+print(plot_habitat_variability)
+print(plot_climate_emergence_plot)
+
 
 df1<- data_ordered[data_ordered$ssp=="SSP1-2.6",]
 df2<- data_ordered[data_ordered$ssp=="SSP5-8.5",]
