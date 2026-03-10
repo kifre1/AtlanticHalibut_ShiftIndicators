@@ -30,75 +30,73 @@ library(viridis) # For the viridis color scale
 viridis_fill <- scale_fill_viridis_d(option = "viridis", direction = -1)
 viridis_fill_flipped <- scale_fill_viridis_d(option = "viridis")
 
-# Function to plot single indices (with mean and standard deviation)
-plot_single_index <- function(data, mean_col, sd_col, title) {
+# Function to create boxplots for single indices
+plot_single_index_boxplot <- function(data, mean_col, sd_col, title) {
   ggplot(data, aes(x = NAFO_Zones, y = !!sym(mean_col), fill = NAFO_Zones)) +
-    geom_bar(stat = "identity", color = "black", position = position_dodge()) +
-    geom_errorbar(aes(ymin = !!sym(mean_col) - !!sym(sd_col),
-                      ymax = !!sym(mean_col) + !!sym(sd_col)), width = 0.2, position = position_dodge(0.9)) +
+    geom_boxplot(aes(lower = !!sym(mean_col) - !!sym(sd_col), # Lower whisker
+                     middle = !!sym(mean_col),               # Median
+                     upper = !!sym(mean_col) + !!sym(sd_col), # Upper whisker
+                     ymin = !!sym(mean_col) - !!sym(sd_col), # Min
+                     ymax = !!sym(mean_col) + !!sym(sd_col),
+                     fill = NAFO_Zones),
+                 stat = "identity") +
     labs(
       title = title,
       x = "NAFO Zones (South to North)",
-      y = "Mean ± SD"
+      y = "Value ± SD"
     ) +
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     viridis_fill
 }
 
-# Function to plot climate emergence index with scenarios
-plot_climate_emergence <- function(data) {
+# Function to plot boxplot for climate emergence index (with fixed y-axis range)
+plot_climate_emergence_boxplot <- function(data) {
   ggplot(data, aes(x = NAFO_Zones, y = mean_yr_climate_emergence, fill = ssp)) +
-    geom_bar(stat = "identity", color = "black", position = position_dodge()) +
-    # Add standard deviation error bars
-    geom_errorbar(
-      aes(ymin = mean_yr_climate_emergence - sd_yr_climate_emergence,
-          ymax = mean_yr_climate_emergence + sd_yr_climate_emergence),
-      width = 0.2, position = position_dodge(0.9), color = "gray50"
-    ) +
-    # Add confidence intervals (if available)
-    geom_errorbar(
-      aes(ymin = mean_yr_climate_emergence - ci_yr_climate_emergence,
-          ymax = mean_yr_climate_emergence + ci_yr_climate_emergence),
-      width = 0.2, position = position_dodge(0.9), color = "black"
-    ) +
+    geom_boxplot(aes(lower = mean_yr_climate_emergence - sd_yr_climate_emergence,
+                     middle = mean_yr_climate_emergence,
+                     upper = mean_yr_climate_emergence + sd_yr_climate_emergence,
+                     ymin = mean_yr_climate_emergence - ci_yr_climate_emergence,
+                     ymax = mean_yr_climate_emergence + ci_yr_climate_emergence),
+                 stat = "identity", position = position_dodge(0.9)) +
     labs(
-      title = "Bar Plot for Climate Emergence (Scenarios)",
-      subtitle = "Gray: Standard Deviation, Black: Confidence Interval",
+      title = "Boxplot for Climate Emergence (Scenarios)",
+      subtitle = "Box: Mean ± SD, Whiskers: Confidence Interval",
       x = "NAFO Zones (South to North)",
-      y = "Mean ± Error",
+      y = "Year of Climate Emergence",
       fill = "SSP Scenarios"
     ) +
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-    viridis_fill_flipped
+    viridis_fill_flipped +
+    coord_cartesian(ylim = c(2015, 2100)) # Set y-axis range
 }
 
-# Create the individual plots
-plot_thermal_safety <- plot_single_index(
+# Create individual plots
+plot_thermal_safety_box <- plot_single_index_boxplot(
   data_raw, 
   "mean_s_thermal_safety_margin", 
   "sd_s_thermal_safety_margin", 
-  "Mean S-Thermal Safety Margin ± SD"
+  "Boxplot for S-Thermal Safety Margin ± SD"
 )
 
-plot_habitat_variability <- plot_single_index(
+plot_habitat_variability_box <- plot_single_index_boxplot(
   data_raw, 
   "mean_ac_thermal_habitat_variability",
   "sd_ac_thermal_habitat_variability", 
-  "Mean AC-Thermal Habitat Variability ± SD"
+  "Boxplot for AC-Thermal Habitat Variability ± SD"
 )
 
 # Filter data for the climate emergence index with scenarios
 data_climate_emergence <- data_raw %>%
   filter(ssp %in% c("SSP1-2.6", "SSP5-8.5"))
 
-plot_climate_emergence_plot <- plot_climate_emergence(data_climate_emergence)
+plot_climate_emergence_boxplot <- plot_climate_emergence_boxplot(data_climate_emergence)
 
 # Show the plots
-print(plot_thermal_safety)
-print(plot_habitat_variability)
-print(plot_climate_emergence_plot)
+print(plot_thermal_safety_box)
+print(plot_habitat_variability_box)
+print(plot_climate_emergence_boxplot)
 
 
 df1<- data_ordered[data_ordered$ssp=="SSP1-2.6",]
