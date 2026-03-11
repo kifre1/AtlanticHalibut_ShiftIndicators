@@ -47,9 +47,49 @@ base_theme <- theme_bw(base_size = 14) +
     plot.margin        = margin(5, 5, 5, 5)
   )
 
+#--- Get Halibut data ---
+halcrib<-read.csv("Data/CRIB/crib_halibut.csv")
+halcrib$ToE.year<-2015+(-log(halcrib$E.Time.of.climate.emergence)/0.033) #calculate raw ToE's from standardized
+
+library(sf)      # For spatial data handling
+library(dplyr)   # For summarizing grouped data
+library(here)
+# Convert halcrib data frame to a spatial object
+halcrib1 <- st_as_sf(halcrib, coords = c("longitude", "latitude"), crs = "WGS84")
+# Reproject both datasets to align their CRS (e.g., EPSG:4326)
+halcrib1 <- st_transform(halcrib1, crs = st_crs(NAFO))
+# Perform a spatial join to add the NAFO zone info to each point in halcrib
+halcrib_with_zones <- st_join(halcrib1, NAFO, na.rm=TRUE)
+
+# Check the first few rows of the resulting dataset
+head(halcrib_with_zones)
+names(halcrib_with_zones)
+unique(halcrib_with_zones$ZONE)
+# Remove rows where NAFO_ID or ZONE are NA
+halcrib_with_zones_clean <- halcrib_with_zones[] %>%
+  filter(!is.na(NAFO_ID), !is.na(ZONE))
+unique(halcrib_with_zones_clean$ZONE)
+head(halcrib_with_zones_clean)
+
+# Add new NAFO groups
+halcrib_with_zones_clean1 <- halcrib_with_zones_clean %>%
+  mutate(
+    NAFO_Zones = case_when(
+      ZONE %in% c("4Vn", "4Vs", "4W") ~ "4VW",    # If ZONE is one of these values, assign "4VW"
+      ZONE %in% c("4X") ~ "4X",
+      ZONE %in% c("3N","3O","3Pn","3Ps") ~ "3NOPs",
+      ZONE %in% c("3K","3L") ~ "3KL",
+      ZONE %in% c("2J","2H","2G") ~ "2JHG",
+      ZONE %in% c("5Y","5Ze", "5Zw", "6A") ~ "5YZ6A",
+      ZONE %in% c("4R","4S","4T") ~ "4RST"
+    )
+  )%>%
+  filter(!is.na(NAFO_Zones))  # Remove rows where NAFO_Zones is NA
+head(halcrib_with_zones_clean1)
+
+
 # ── Plot 1 – Thermal Safety Margin (direction = 1: purple → yellow) ──────────
 grad_tsm <- make_gradient_df(xmin = 0, xmax = 1, direction = 1)
-
 p1 <- ggplot(halcrib_with_zones_clean1,
              aes(x = S.Thermal.safety.margin, y = NAFO_Zones)) +
   gradient_rects(grad_tsm) +
